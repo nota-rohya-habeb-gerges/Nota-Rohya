@@ -747,6 +747,34 @@ input[type="date"].modal-input {
     margin: 0 0 10px;
 }
 
+.auth-info {
+    background: #e3f5e1;
+    color: #2d6a2d;
+    border: 1px solid #2d6a2d;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    text-align: center;
+    margin: 0 0 10px;
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: #795757;
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    align-self: center;
+}
+
+.link-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
 /* ===================== Top bar (logged-in user + logout + admin entry) ===================== */
 .top-bar {
     width: 100%;
