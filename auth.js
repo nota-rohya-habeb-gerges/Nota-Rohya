@@ -22,8 +22,12 @@ const AUTH_ERROR_MESSAGES = {
     'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل.',
     'auth/weak-password': 'كلمة السر ضعيفة جدًا (٦ أحرف على الأقل).',
     'auth/missing-password': 'من فضلك أدخل كلمة السر.',
-    'auth/network-request-failed': 'تعذر الاتصال بالإنترنت.'
+    'auth/network-request-failed': 'تعذر الاتصال بالإنترنت.',
+    'auth/too-many-requests': 'محاولات كثيرة، حاول مرة أخرى بعد قليل.',
+    'auth/missing-email': 'من فضلك أدخل بريدك الإلكتروني أولاً.'
 };
+
+const RESET_SENT_MESSAGE = 'إذا كان هذا البريد مسجلاً لدينا، فقد أرسلنا إليه رابط إعادة تعيين كلمة السر. تحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها.';
 
 function authErrorMessage(err) {
     return AUTH_ERROR_MESSAGES[err.code] || 'حدث خطأ ما، حاول مرة أخرى.';
@@ -33,10 +37,18 @@ function showAuthError(msg) {
     const el = document.getElementById('auth-error');
     el.innerText = msg;
     el.style.display = msg ? 'block' : 'none';
+    if (msg) showAuthInfo('');
+}
+
+function showAuthInfo(msg) {
+    const el = document.getElementById('auth-info');
+    el.innerText = msg;
+    el.style.display = msg ? 'block' : 'none';
 }
 
 function switchAuthTab(tab) {
     showAuthError('');
+    showAuthInfo('');
     document.getElementById('tab-login').classList.toggle('active', tab === 'login');
     document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
     document.getElementById('login-form').style.display = tab === 'login' ? 'flex' : 'none';
@@ -65,9 +77,38 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tab-signup').addEventListener('click', () => switchAuthTab('signup'));
     setupPasswordToggles();
 
+    // نسيت كلمة السر: يرسل رابط إعادة التعيين للبريد المكتوب في خانة تسجيل الدخول
+    document.getElementById('forgot-password-btn').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        showAuthError('');
+        showAuthInfo('');
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) {
+            showAuthError('اكتب بريدك الإلكتروني في الخانة أعلاه أولاً، ثم اضغط "نسيت كلمة السر؟".');
+            document.getElementById('login-email').focus();
+            return;
+        }
+        btn.disabled = true;
+        try {
+            auth.languageCode = 'ar'; // الرسالة تصل بالعربية
+            await auth.sendPasswordResetEmail(email);
+            showAuthInfo(RESET_SENT_MESSAGE);
+        } catch (err) {
+            if (err.code === 'auth/user-not-found') {
+                // نفس الرسالة سواء كان الحساب موجودًا أم لا (حتى لا نكشف من هو مسجل)
+                showAuthInfo(RESET_SENT_MESSAGE);
+            } else {
+                showAuthError(authErrorMessage(err));
+            }
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         showAuthError('');
+        showAuthInfo('');
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         const btn = e.target.querySelector('button[type="submit"]');
@@ -141,5 +182,6 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('auth-screen').style.display = 'flex';
         document.getElementById('app-root').style.display = 'none';
         showAuthError('');
+        showAuthInfo('');
     }
 });
