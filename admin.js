@@ -1,5 +1,6 @@
 // ============================================================================
 // لوحة الخادم: عرض قائمة المخدومين، وفتح بيانات أي منهم للقراءة فقط
+// (الخادم يرى المخدومين فقط، ولا يرى بيانات الخدام الآخرين)
 // ============================================================================
 
 async function openAdminDashboard() {
@@ -11,10 +12,11 @@ async function openAdminDashboard() {
     openModal('admin-modal');
 
     try {
-        const snap = await db.collection('users').get();
+        // لازم الفلتر هنا، لأن قواعد Firestore بتسمح للخادم يقرأ المخدومين بس
+        const snap = await db.collection('users').where('role', '==', 'makhdoum').get();
         const list = [];
         snap.forEach(doc => {
-            if (doc.id === currentUser.uid) return; // لا داعي لعرض الخادم نفسه
+            if (doc.id === currentUser.uid) return; // لا داعي لعرض الشخص نفسه
             list.push({ uid: doc.id, ...doc.data() });
         });
 
@@ -35,7 +37,6 @@ async function openAdminDashboard() {
             const btn = document.createElement('button');
             btn.className = 'admin-person-btn';
             btn.innerText = person.name || person.email || 'بدون اسم';
-            if (person.role === 'khadem') btn.innerText += ' (خادم)';
             btn.addEventListener('click', () => viewMakhdoumData(person));
             wrap.appendChild(btn);
         });
