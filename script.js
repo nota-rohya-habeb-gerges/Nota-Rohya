@@ -221,9 +221,25 @@ async function bindTableToWeek(week) {
         });
     });
 
+    highlightToday(week);
+
     if (document.querySelector('.chart-container').style.display === 'block') {
         showChart();
     }
+}
+
+// ---- Highlight today's column when viewing the current week ----------------
+function highlightToday(week) {
+    const table = document.querySelector('.table-container table');
+    if (!table) return;
+    table.querySelectorAll('.today-col').forEach(el => el.classList.remove('today-col'));
+    if (weekKey(week) !== weekKey(getCurrentWeek())) return;
+
+    const colIndex = ((new Date().getDay() - 5 + 7) % 7) + 1; // +1 skips the "Days | Tasks" column
+    table.querySelectorAll('tr').forEach(tr => {
+        const cell = tr.children[colIndex];
+        if (cell) cell.classList.add('today-col');
+    });
 }
 
 function buildDefaultTable() {
