@@ -1,5 +1,5 @@
 // Bump this number whenever you want to force every device to drop its old cached files.
-const cacheName = 'nota-rohya-cache-v3';
+const cacheName = 'nota-rohya-cache-v4';
 // Relative paths (not "/...") so this works whether the site lives at the top of an address
 // (nota-rohya.github.io) or under a folder (username.github.io/nota-rohya/).
 const assetsToCache = [
