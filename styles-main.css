@@ -899,3 +899,12 @@ input[type="date"].modal-input {
         gap: 6px;
     }
 }
+
+/* ===== Today's column highlight (current week only) ===== */
+td.today-col {
+    background: rgba(121, 87, 87, 0.13);
+}
+th.today-col {
+    background: #795757;
+    color: #FFF0D1;
+}
