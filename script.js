@@ -85,17 +85,12 @@ function weekOwnerMonth(week) {
 }
 
 function getCurrentWeek() {
+    // Weeks run Friday -> Thursday. Work backwards from today to the most recent Friday.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    let weeks = getWeeksForYear(today.getFullYear());
-    let found = weeks.find(w => today >= w.start && today <= w.end);
-
-    if (!found) {
-        weeks = getWeeksForYear(today.getFullYear() - 1);
-        found = weeks.find(w => today >= w.start && today <= w.end);
-    }
-    return found;
+    const daysSinceFriday = (today.getDay() - 5 + 7) % 7; // Fri=0, Sat=1 ... Thu=6
+    const start = addDays(today, -daysSinceFriday);
+    return { start: start, end: addDays(start, 6) };
 }
 
 // ---- Firestore data access ---------------------------------------------------
@@ -616,8 +611,11 @@ function generateWeeks() {
     todayBtn.addEventListener('click', () => {
         const week = getCurrentWeek();
         bindTableToWeek(week);
-        calendarYear = week.start.getFullYear();
-        generateWeeks();
+        // Close the calendar and bring the tracker table into view
+        document.querySelector('.calendar-container').style.display = 'none';
+        calendarYear = weekOwnerMonth(week).year;
+        const tc = document.querySelector('.table-container');
+        if (tc) tc.scrollIntoView({ behavior: 'smooth' });
     });
 
     controlsRow.appendChild(prevBtn);
