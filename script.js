@@ -464,53 +464,81 @@ function closeModal(id) {
     if (el) el.style.display = 'none';
 }
 
-// ---- Bible reading notes (per week, one entry per day) ----
-async function openBibleNotes() {
-    if (!currentWeekKey || !viewingUid) return;
+// ---- Bible reading of the day + notes (saved in Firebase) ----
+let bibleNoteLoaded = false;
 
-    document.getElementById('bible-modal-week-label').innerText = currentWeekLabel;
+function todayDayNameAr() {
+    return DAY_LABELS_AR[(new Date().getDay() - 5 + 7) % 7];
+}
+
+async function openBibleNotes() {
+    if (!viewingUid) return;
+
+    const today = new Date();
+    const dayAr = todayDayNameAr();
+    const reading = getReadingForDate(today);
+    const dateStr = today.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    document.getElementById('bible-modal-week-label').innerText = `${dayAr} ${dateStr}`;
 
     const body = document.getElementById('bible-notes-body');
     body.innerHTML = "";
 
-    const savedDoc = await loadWeekDoc(viewingUid, currentWeekKey);
-    const saved = savedDoc.bibleNotes || {};
+    const card = document.createElement('div');
+    card.className = 'bible-reading-card';
+    if (reading) {
+        card.innerHTML = `<div class="bible-reading-testament"></div><div class="bible-reading-text"></div><div class="bible-reading-day"></div>`;
+        card.querySelector('.bible-reading-testament').innerText = reading.testament;
+        card.querySelector('.bible-reading-text').innerText = reading.reading;
+    } else {
+        card.innerText = 'لا توجد قراءة مجدولة لهذا اليوم (خطة القراءة تبدأ ٢٧ سبتمبر ٢٠٢٦ وتنتهي ٢٥ سبتمبر ٢٠٢٨).';
+    }
+    body.appendChild(card);
 
-    DAY_LABELS_AR.forEach((dayAr, i) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'bible-day-row';
+    const label = document.createElement('label');
+    label.className = 'modal-field-label';
+    label.innerText = 'ملاحظاتك';
+    label.setAttribute('for', 'bible-note-today');
+    const textarea = document.createElement('textarea');
+    textarea.id = 'bible-note-today';
+    textarea.className = 'modal-textarea modal-textarea-small';
+    textarea.placeholder = 'اكتب ملاحظاتك عن قراءة اليوم...';
+    textarea.disabled = viewingReadOnly || !reading;
+    body.appendChild(label);
+    body.appendChild(textarea);
+    bibleNoteLoaded = false;
 
-        const label = document.createElement('label');
-        label.className = 'modal-field-label';
-        label.innerText = dayAr;
-        label.setAttribute('for', `bible-note-${i}`);
-
-        const textarea = document.createElement('textarea');
-        textarea.id = `bible-note-${i}`;
-        textarea.className = 'modal-textarea modal-textarea-small';
-        textarea.placeholder = `ملاحظاتك عن قراءة يوم ${dayAr}...`;
-        textarea.value = saved[dayAr] || "";
-        textarea.disabled = viewingReadOnly;
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(textarea);
-        body.appendChild(wrapper);
-    });
-
-    document.getElementById('bible-modal-save-btn').style.display = viewingReadOnly ? 'none' : '';
+    document.getElementById('bible-modal-save-btn').style.display = (viewingReadOnly || !reading) ? 'none' : '';
     openModal('bible-modal');
+
+    try {
+        const doc = await loadWeekDoc(viewingUid, weekKey(getCurrentWeek()));
+        textarea.value = (doc.bibleNotes || {})[dayAr] || "";
+        bibleNoteLoaded = true;
+    } catch (err) {
+        console.error('تعذر تحميل الملاحظات', err);
+    }
 }
 
 async function saveBibleNotes() {
-    if (!currentWeekKey || viewingReadOnly) return;
+    if (viewingReadOnly || !viewingUid) return;
+    const textarea = document.getElementById('bible-note-today');
+    if (!textarea) return;
+    if (!bibleNoteLoaded) {
+        alert('لم يتم تحميل ملاحظاتك المحفوظة بعد. تأكد من اتصالك بالإنترنت وأعد فتح النافذة.');
+        return;
+    }
 
-    const data = {};
-    DAY_LABELS_AR.forEach((dayAr, i) => {
-        const textarea = document.getElementById(`bible-note-${i}`);
-        if (textarea) data[dayAr] = textarea.value;
-    });
-
-    await saveWeekField('bibleNotes', data);
+    try {
+        await weekDocRef(viewingUid, weekKey(getCurrentWeek())).set(
+            { bibleNotes: { [todayDayNameAr()]: textarea.value }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+            { merge: true }
+        );
+    } catch (err) {
+        console.error('تعذر حفظ الملاحظات', err);
+        alert('تعذر الحفظ، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.\n\n(رمز الخطأ: ' + (err.code || err.message) + ')');
+        return;
+    }
     closeModal('bible-modal');
 }
 
