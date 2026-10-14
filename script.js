@@ -492,6 +492,7 @@ async function openBibleNotes() {
         card.innerHTML = `<div class="bible-reading-testament"></div><div class="bible-reading-text"></div><div class="bible-reading-day"></div>`;
         card.querySelector('.bible-reading-testament').innerText = reading.testament;
         card.querySelector('.bible-reading-text').innerText = reading.reading;
+        card.querySelector('.bible-reading-day').innerText = `اليوم ${reading.number.toLocaleString('ar-EG')} من ٧٣٠`;
     } else {
         card.innerText = 'لا توجد قراءة مجدولة لهذا اليوم (خطة القراءة تبدأ ٢٧ سبتمبر ٢٠٢٦ وتنتهي ٢٥ سبتمبر ٢٠٢٨).';
     }
@@ -578,53 +579,70 @@ async function saveBibleNotes() {
     closeModal('bible-modal');
 }
 
-// ---- Other spiritual practice notes (per week, one entry per day) ----
-async function openOtherPracticeNotes() {
-    if (!currentWeekKey || !viewingUid) return;
+// ---- Other spiritual practice notes (today's entry only; stored per week, one entry per day) ----
+let otherPracticeLoaded = false;
 
-    document.getElementById('other-practice-modal-week-label').innerText = currentWeekLabel;
+async function openOtherPracticeNotes() {
+    if (!viewingUid) return;
+
+    const today = new Date();
+    const dayAr = todayDayNameAr();
+    const dateStr = today.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('other-practice-modal-week-label').innerText = `${dayAr} ${dateStr}`;
 
     const body = document.getElementById('other-practice-notes-body');
     body.innerHTML = "";
 
-    const savedDoc = await loadWeekDoc(viewingUid, currentWeekKey);
-    const saved = savedDoc.otherPracticeNotes || {};
+    const label = document.createElement('label');
+    label.className = 'modal-field-label';
+    label.innerText = 'الممارسة الروحية اليوم';
+    label.setAttribute('for', 'other-practice-note-today');
 
-    DAY_LABELS_AR.forEach((dayAr, i) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'bible-day-row';
+    const textarea = document.createElement('textarea');
+    textarea.id = 'other-practice-note-today';
+    textarea.className = 'modal-textarea';
+    textarea.placeholder = 'اكتب الممارسة الروحية التي مارستها اليوم...';
+    textarea.disabled = viewingReadOnly;
 
-        const label = document.createElement('label');
-        label.className = 'modal-field-label';
-        label.innerText = dayAr;
-        label.setAttribute('for', `other-practice-note-${i}`);
-
-        const textarea = document.createElement('textarea');
-        textarea.id = `other-practice-note-${i}`;
-        textarea.className = 'modal-textarea modal-textarea-small';
-        textarea.placeholder = `اكتب الممارسة الروحية التي مارستها يوم ${dayAr}...`;
-        textarea.value = saved[dayAr] || "";
-        textarea.disabled = viewingReadOnly;
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(textarea);
-        body.appendChild(wrapper);
-    });
+    body.appendChild(label);
+    body.appendChild(textarea);
+    otherPracticeLoaded = false;
 
     document.getElementById('other-practice-modal-save-btn').style.display = viewingReadOnly ? 'none' : '';
     openModal('other-practice-modal');
+
+    try {
+        const doc = await loadWeekDoc(viewingUid, weekKey(getCurrentWeek()));
+        textarea.value = (doc.otherPracticeNotes || {})[dayAr] || "";
+        otherPracticeLoaded = true;
+    } catch (err) {
+        console.error('تعذر تحميل الممارسة الروحية', err);
+    }
 }
 
 async function saveOtherPracticeNotes() {
-    if (!currentWeekKey || viewingReadOnly) return;
+    if (viewingReadOnly || !viewingUid) return;
+    const textarea = document.getElementById('other-practice-note-today');
+    if (!textarea) return;
+    if (!otherPracticeLoaded) {
+        alert('لم يتم تحميل ما كتبته سابقًا بعد. تأكد من اتصالك بالإنترنت وأعد فتح النافذة.');
+        return;
+    }
 
-    const data = {};
-    DAY_LABELS_AR.forEach((dayAr, i) => {
-        const textarea = document.getElementById(`other-practice-note-${i}`);
-        if (textarea) data[dayAr] = textarea.value;
-    });
-
-    await saveWeekField('otherPracticeNotes', data);
+    try {
+        // merge: true يدمج الحقل اليومي فقط، فلا تتأثر باقي أيام الأسبوع
+        await weekDocRef(viewingUid, weekKey(getCurrentWeek())).set(
+            {
+                otherPracticeNotes: { [todayDayNameAr()]: textarea.value },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            },
+            { merge: true }
+        );
+    } catch (err) {
+        console.error('تعذر حفظ الممارسة الروحية', err);
+        alert('تعذر الحفظ، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.\n\n(رمز الخطأ: ' + (err.code || err.message) + ')');
+        return;
+    }
     closeModal('other-practice-modal');
 }
 
