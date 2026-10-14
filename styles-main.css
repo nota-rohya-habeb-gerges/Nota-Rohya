@@ -913,3 +913,8 @@ th.today-col {
 .bible-reading-testament { font-size: 0.85em; opacity: 0.75; }
 .bible-reading-text { font-size: 1.6em; font-weight: bold; margin: 6px 0; }
 .bible-reading-day { font-size: 0.8em; opacity: 0.65; }
+
+/* Daily question card inside the Bible reading modal */
+.bible-question-card { padding: 14px 16px; margin-bottom: 4px; border-radius: 12px; background: #FFEBC2; border-right: 4px solid #795757; color: #795757; }
+.bible-question-title { font-size: 0.8em; font-weight: bold; opacity: 0.75; margin-bottom: 4px; }
+.bible-question-text { font-size: 1.05em; line-height: 1.7; font-weight: bold; }
