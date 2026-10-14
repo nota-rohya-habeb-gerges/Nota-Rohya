@@ -95,7 +95,7 @@ function getCurrentWeek() {
 
 // ---- Firestore data access ---------------------------------------------------
 // users/{uid}                       -> { name, email, role, createdAt }
-// users/{uid}/weeks/{weekKey}       -> { matrix, bibleNotes, otherPracticeNotes, updatedAt }
+// users/{uid}/weeks/{weekKey}       -> { matrix, bibleAnswers, bibleNotes (تأمل), otherPracticeNotes, updatedAt }
 // users/{uid}/confession/record     -> { fatherName, lastDate, notes, updatedAt }
 function weekDocRef(uid, wKey) {
     return db.collection('users').doc(uid).collection('weeks').doc(wKey);
@@ -477,6 +477,7 @@ async function openBibleNotes() {
     const today = new Date();
     const dayAr = todayDayNameAr();
     const reading = getReadingForDate(today);
+    const question = getQuestionForReading(reading);
     const dateStr = today.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
 
     document.getElementById('bible-modal-week-label').innerText = `${dayAr} ${dateStr}`;
@@ -484,6 +485,7 @@ async function openBibleNotes() {
     const body = document.getElementById('bible-notes-body');
     body.innerHTML = "";
 
+    // --- قراءة اليوم ---
     const card = document.createElement('div');
     card.className = 'bible-reading-card';
     if (reading) {
@@ -495,25 +497,53 @@ async function openBibleNotes() {
     }
     body.appendChild(card);
 
-    const label = document.createElement('label');
-    label.className = 'modal-field-label';
-    label.innerText = 'ملاحظاتك';
-    label.setAttribute('for', 'bible-note-today');
-    const textarea = document.createElement('textarea');
-    textarea.id = 'bible-note-today';
-    textarea.className = 'modal-textarea modal-textarea-small';
-    textarea.placeholder = 'اكتب ملاحظاتك عن قراءة اليوم...';
-    textarea.disabled = viewingReadOnly || !reading;
-    body.appendChild(label);
-    body.appendChild(textarea);
+    let answerBox = null, reflectionBox = null;
+
+    if (reading) {
+        // --- سؤال اليوم ---
+        const qCard = document.createElement('div');
+        qCard.className = 'bible-question-card';
+        qCard.innerHTML = `<div class="bible-question-title">سؤال اليوم</div><div class="bible-question-text"></div>`;
+        qCard.querySelector('.bible-question-text').innerText = question;
+        body.appendChild(qCard);
+
+        // --- إجابتك ---
+        const answerLabel = document.createElement('label');
+        answerLabel.className = 'modal-field-label';
+        answerLabel.innerText = 'إجابتك';
+        answerLabel.setAttribute('for', 'bible-answer-today');
+        answerBox = document.createElement('textarea');
+        answerBox.id = 'bible-answer-today';
+        answerBox.className = 'modal-textarea';
+        answerBox.placeholder = 'اكتب إجابتك عن سؤال اليوم...';
+        answerBox.disabled = viewingReadOnly;
+        body.appendChild(answerLabel);
+        body.appendChild(answerBox);
+
+        // --- تأمل ---
+        // (محفوظ في نفس حقل bibleNotes القديم، فالملاحظات السابقة تظهر هنا)
+        const reflectionLabel = document.createElement('label');
+        reflectionLabel.className = 'modal-field-label';
+        reflectionLabel.innerText = 'تأمل';
+        reflectionLabel.setAttribute('for', 'bible-note-today');
+        reflectionBox = document.createElement('textarea');
+        reflectionBox.id = 'bible-note-today';
+        reflectionBox.className = 'modal-textarea';
+        reflectionBox.placeholder = 'اكتب تأملك في قراءة اليوم...';
+        reflectionBox.disabled = viewingReadOnly;
+        body.appendChild(reflectionLabel);
+        body.appendChild(reflectionBox);
+    }
     bibleNoteLoaded = false;
 
     document.getElementById('bible-modal-save-btn').style.display = (viewingReadOnly || !reading) ? 'none' : '';
     openModal('bible-modal');
 
+    if (!reading) return;
     try {
         const doc = await loadWeekDoc(viewingUid, weekKey(getCurrentWeek()));
-        textarea.value = (doc.bibleNotes || {})[dayAr] || "";
+        answerBox.value = (doc.bibleAnswers || {})[dayAr] || "";
+        reflectionBox.value = (doc.bibleNotes || {})[dayAr] || "";
         bibleNoteLoaded = true;
     } catch (err) {
         console.error('تعذر تحميل الملاحظات', err);
@@ -522,16 +552,22 @@ async function openBibleNotes() {
 
 async function saveBibleNotes() {
     if (viewingReadOnly || !viewingUid) return;
-    const textarea = document.getElementById('bible-note-today');
-    if (!textarea) return;
+    const answerBox = document.getElementById('bible-answer-today');
+    const reflectionBox = document.getElementById('bible-note-today');
+    if (!answerBox || !reflectionBox) return;
     if (!bibleNoteLoaded) {
-        alert('لم يتم تحميل ملاحظاتك المحفوظة بعد. تأكد من اتصالك بالإنترنت وأعد فتح النافذة.');
+        alert('لم يتم تحميل ما كتبته سابقًا بعد. تأكد من اتصالك بالإنترنت وأعد فتح النافذة.');
         return;
     }
 
+    const dayAr = todayDayNameAr();
     try {
         await weekDocRef(viewingUid, weekKey(getCurrentWeek())).set(
-            { bibleNotes: { [todayDayNameAr()]: textarea.value }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+            {
+                bibleAnswers: { [dayAr]: answerBox.value },
+                bibleNotes: { [dayAr]: reflectionBox.value },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            },
             { merge: true }
         );
     } catch (err) {
