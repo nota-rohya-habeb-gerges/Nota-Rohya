@@ -909,7 +909,7 @@ th.today-col {
     color: #FFF0D1;
 }
 /* Bible reading of the day */
-.bible-reading-card { text-align: center; padding: 16px; margin-bottom: 14px; border-radius: 12px; background: rgba(128,128,128,0.12); }
+.bible-reading-card { text-align: center; padding: 16px; margin-bottom: 14px; border-radius: 12px; background: #FFEBC2; color: #795757; }
 .bible-reading-testament { font-size: 0.85em; opacity: 0.75; }
 .bible-reading-text { font-size: 1.6em; font-weight: bold; margin: 6px 0; }
 .bible-reading-day { font-size: 0.8em; opacity: 0.65; }
