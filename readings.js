@@ -31,7 +31,7 @@ const READING_BOOKS = [
     ["يهوذا", 1, NT], ["رؤيا يوحنا", 22, NT]
 ];
 
-// ترجع { number, testament, reading } لتاريخ معين، أو null لو خارج الخطة
+// ترجع { number, testament, book, chapter, reading } لتاريخ معين، أو null لو خارج الخطة
 function getReadingForDate(date) {
     const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     // Math.round عشان تغيير التوقيت الصيفي ما يأثرش على عدد الأيام
@@ -41,7 +41,7 @@ function getReadingForDate(date) {
     let remaining = dayNumber;
     for (const [book, chapters, testament] of READING_BOOKS) {
         if (remaining <= chapters) {
-            return { number: dayNumber, testament, reading: `${book} ${remaining}` };
+            return { number: dayNumber, testament, book, chapter: remaining, reading: `${book} ${remaining}` };
         }
         remaining -= chapters;
     }
