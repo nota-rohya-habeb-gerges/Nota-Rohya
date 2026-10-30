@@ -79,7 +79,11 @@
 
   <br>
   <h1 class="weekly">Nota Rohya</h1>
-  <h2 id="current-week" style="color:#795757; text-align:center; margin-top:5px;"></h2>
+  <div class="week-nav">
+    <button id="prev-week-btn" class="week-nav-btn" type="button" aria-label="Previous week">&#9664;</button>
+    <h2 id="current-week"></h2>
+    <button id="next-week-btn" class="week-nav-btn" type="button" aria-label="Next week">&#9654;</button>
+  </div>
   <div class="table-container">
     <table>
       <tr>
@@ -1065,6 +1069,10 @@
     </div>
   </div>
 
+  <div class="extract-row">
+    <button id="extract-btn" class="extract" type="button" onclick="openExtractModal()">Extract</button>
+  </div>
+
   <div class="calendar-container" style="display:none;">
     <div class="weeks-container"></div>
   </div>
@@ -1132,6 +1140,22 @@
     </div>
   </div>
 
+  <!-- ===== Extract (Excel summary) Modal ===== -->
+  <div class="modal-overlay" id="extract-modal">
+    <div class="modal-box extract-box">
+      <div class="modal-header">
+        <h3>ملخص التقدم الأسبوعي</h3>
+        <button class="modal-close" onclick="closeModal('extract-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="extract-body">
+        <!-- table injected by JS -->
+      </div>
+      <div class="modal-footer">
+        <button id="extract-download-btn" class="modal-save" style="display:none;" onclick="downloadExtractExcel()">تحميل ملف Excel</button>
+      </div>
+    </div>
+  </div>
+
   </div> <!-- /#app-root -->
 
   <!-- ===== Admin Dashboard (خادم only) ===== -->
@@ -1159,5 +1183,7 @@
   <script src="questions.js"></script>
   <script src="script.js"></script>
   <script src="admin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="extract.js"></script>
 </body>
 </html>
