@@ -153,6 +153,8 @@ async function saveConfessionDoc(data) {
 // ---- Page setup -------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", function () {
     document.querySelector('.refresh').addEventListener('click', confirmAndClearCheckboxes);
+    document.getElementById('prev-week-btn').addEventListener('click', () => shiftWeek(-1));
+    document.getElementById('next-week-btn').addEventListener('click', () => shiftWeek(1));
 
     document.querySelector('.progress').addEventListener('click', function () {
         const container = document.querySelector('.chart-container');
@@ -194,7 +196,19 @@ window.addEventListener('app:ready', function () {
 });
 
 // ---- Table binding ------------------------------------------------------------
+let bindRequestId = 0;        // guards against fast arrow clicks finishing out of order
+let shownWeekStart = null;    // start (Friday) of the week currently on screen
+
+// Move the table one week back (-1) or forward (+1) from the week on screen
+function shiftWeek(direction) {
+    const base = shownWeekStart || getCurrentWeek().start;
+    const start = addDays(base, direction * 7);
+    bindTableToWeek({ start: start, end: addDays(start, 6) });
+}
+
 async function bindTableToWeek(week) {
+    const requestId = ++bindRequestId;
+    shownWeekStart = new Date(week.start);
     currentWeekKey = weekKey(week);
     currentWeekLabel = formatWeekLabel(week);
     document.getElementById("current-week").innerText = currentWeekLabel;
@@ -206,7 +220,8 @@ async function bindTableToWeek(week) {
         tableContainer.appendChild(table);
     }
 
-    const savedDoc = await loadWeekDoc(viewingUid, currentWeekKey);
+    const savedDoc = await loadWeekDoc(viewingUid, weekKey(week));
+    if (requestId !== bindRequestId) return;   // a newer week was requested meanwhile
     const savedMatrix = savedDoc.matrix || [];
     const rows = table.querySelectorAll("tr:not(:first-child)");
     rows.forEach((row, rowIndex) => {
