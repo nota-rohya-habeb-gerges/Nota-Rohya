@@ -33,12 +33,30 @@ async function openAdminDashboard() {
         wrap.style.flexDirection = 'column';
         wrap.style.gap = '10px';
 
+        // One workbook with a sheet per makhdoum
+        const allBtn = document.createElement('button');
+        allBtn.className = 'modal-save admin-extract-all-btn';
+        allBtn.innerText = 'تحميل Excel لكل المخدومين';
+        allBtn.addEventListener('click', () => exportAllMakhdoumExcel(list, allBtn));
+        wrap.appendChild(allBtn);
+
         list.forEach(person => {
+            const row = document.createElement('div');
+            row.className = 'admin-person-row';
+
             const btn = document.createElement('button');
             btn.className = 'admin-person-btn';
             btn.innerText = person.name || person.email || 'بدون اسم';
             btn.addEventListener('click', () => viewMakhdoumData(person));
-            wrap.appendChild(btn);
+
+            const exBtn = document.createElement('button');
+            exBtn.className = 'admin-extract-btn';
+            exBtn.innerText = 'Extract';
+            exBtn.addEventListener('click', () => exportMakhdoumExcel(person, exBtn));
+
+            row.appendChild(btn);
+            row.appendChild(exBtn);
+            wrap.appendChild(row);
         });
 
         body.appendChild(wrap);
