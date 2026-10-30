@@ -918,3 +918,179 @@ th.today-col {
 .bible-question-card { padding: 14px 16px; margin-bottom: 4px; border-radius: 12px; background: #FFEBC2; border-right: 4px solid #795757; color: #795757; }
 .bible-question-title { font-size: 0.8em; font-weight: bold; opacity: 0.75; margin-bottom: 4px; }
 .bible-question-text { font-size: 1.05em; line-height: 1.7; font-weight: bold; }
+
+/* ===================== Extract (Excel summary) ===================== */
+.extract-row {
+    width: 95%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    margin: 14px auto 0;
+}
+
+.extract {
+    background-color: #795757;
+    color: #FFF0D1;
+    border: none;
+    border-radius: 8px;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 40px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.extract:hover {
+    background-color: #664343;
+    transform: translateY(-2px);
+}
+
+.extract:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.extract-box {
+    max-width: 960px;
+}
+
+.extract-scroll {
+    overflow: auto;
+    max-height: 60vh;
+    border: 1px solid #795757;
+    border-radius: 8px;
+}
+
+.extract-table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    table-layout: auto;
+    font-size: 13px;
+}
+
+.extract-table th {
+    position: sticky;
+    top: 0;
+    background: #795757;
+    color: #FFF0D1;
+    font-size: 12px;
+    padding: 8px 10px;
+    white-space: nowrap;
+    z-index: 2;
+}
+
+.extract-table td {
+    padding: 6px 10px;
+    white-space: nowrap;
+}
+
+.extract-table td:first-child, .extract-table th:first-child {
+    width: auto;
+}
+
+.extract-week-cell {
+    position: sticky;
+    right: 0;
+    background: #FFEBC2;
+    font-weight: bold;
+    direction: ltr;
+    z-index: 1;
+}
+
+.extract-table th:first-child {
+    right: 0;
+    z-index: 3;
+}
+
+.extract-total-row td {
+    background: #f5dca0;
+    font-weight: bold;
+}
+
+/* ===== Admin list: per-person Extract button ===== */
+.admin-person-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.admin-person-row .admin-person-btn {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.admin-extract-btn {
+    flex: 0 0 auto;
+    background: #795757;
+    color: #FFF0D1;
+    border: none;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.admin-extract-btn:hover:not(:disabled) {
+    background: #664343;
+}
+
+.admin-extract-btn:disabled,
+.admin-extract-all-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.admin-extract-all-btn {
+    width: 100%;
+}
+
+/* Extract: month / whole-year chooser */
+.extract-modes { display: flex; gap: 10px; justify-content: center; margin: 4px 0 10px; }
+.extract-mode-btn { flex: 1; max-width: 180px; padding: 10px 12px; border: 2px solid #795757; border-radius: 10px; background: transparent; color: #795757; font-family: inherit; font-size: 1rem; font-weight: bold; cursor: pointer; }
+.extract-mode-btn.active { background: #795757; color: #fff; }
+/* ===== Week navigation (arrows on both sides of the date) ===== */
+.week-nav {
+    direction: ltr;               /* left arrow = previous week, right arrow = next week */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 5px 0 10px;
+    width: 95%;
+    max-width: 600px;
+}
+
+.week-nav h2 {
+    color: #795757;
+    text-align: center;
+    margin: 0;
+    min-width: 0;
+}
+
+.week-nav-btn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 8px;
+    background: #795757;
+    color: #FFF0D1;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.week-nav-btn:hover { background: #664343; }
+.week-nav-btn:active { transform: scale(0.94); }
+
+.extract-select { display: block; margin: 0 auto; padding: 8px 12px; border: 2px solid #795757; border-radius: 10px; background: #fff8ec; color: #795757; font-family: inherit; font-size: 1rem; font-weight: bold; }
